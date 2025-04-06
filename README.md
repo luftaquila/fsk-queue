@@ -1,2 +1,2 @@
-# fsk-queue
+# Formula Student Korea Inspection Wait Queue
 
