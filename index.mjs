@@ -13,7 +13,7 @@ const db = {
     chassis: { type: 'chassis', name: '섀시', length: 0, active: false },
     tilting: { type: 'tilting', name: '틸팅', length: 0, active: false },
     braking: { type: 'braking', name: '제동', length: 0, active: false },
-    noise: { type: 'noise', name: '소음/RTD', length: 0, active: false },
+    noise: { type: 'noise', name: '소음', length: 0, active: false },
     rain: { type: 'rain', name: '우천', length: 0, active: false },
   }),
   current: await JSONFilePreset(path.join(pwd, 'db-current.json'), {}),
