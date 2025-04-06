@@ -17,8 +17,6 @@ body {
   width: 100%;
   position: absolute;
   font-family: "Goorm Sans", "MonoplexKR", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  font-size: 1.1rem;
-  line-height: 1.7rem;
   user-select: none;
 }
 
