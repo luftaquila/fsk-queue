@@ -1,5 +1,8 @@
-# Created by https://www.toptal.com/developers/gitignore/api/windows,linux,macos,node,vim
-# Edit at https://www.toptal.com/developers/gitignore?templates=windows,linux,macos,node,vim
+# node db
+db-*.json
+
+# Created by https://www.toptal.com/developers/gitignore/api/windows,linux,macos,node
+# Edit at https://www.toptal.com/developers/gitignore?templates=windows,linux,macos,node
 
 ### Linux ###
 *~
@@ -189,26 +192,6 @@ dist
 # SvelteKit build / generate output
 .svelte-kit
 
-### Vim ###
-# Swap
-[._]*.s[a-v][a-z]
-!*.svg  # comment out if you don't need vector files
-[._]*.sw[a-p]
-[._]s[a-rt-v][a-z]
-[._]ss[a-gi-z]
-[._]sw[a-p]
-
-# Session
-Session.vim
-Sessionx.vim
-
-# Temporary
-.netrwhist
-# Auto-generated tag files
-tags
-# Persistent undo
-[._]*.un~
-
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
@@ -235,4 +218,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,node,vim
+# End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,node

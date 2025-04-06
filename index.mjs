@@ -11,7 +11,7 @@ const db = {
     battery: { type: 'battery', name: '배터리', length: 0, active: false },
     electric: { type: 'electric', name: '전기', length: 0, active: false },
     chassis: { type: 'chassis', name: '섀시', length: 0, active: false },
-    tilting: { type: 'tilting', name: '틸팅', length: 0, active: true },
+    tilting: { type: 'tilting', name: '틸팅', length: 0, active: false },
     braking: { type: 'braking', name: '제동', length: 0, active: false },
     noise: { type: 'noise', name: '소음/RTD', length: 0, active: false },
     rain: { type: 'rain', name: '우천', length: 0, active: false },
@@ -159,7 +159,7 @@ app.post('/register/:type', async (req, res) => {
     return res.status(400).send('엔트리 번호가 올바르지 않습니다.');
   }
 
-  if (req.body.phone.test(/^010\d{8}$/) === false) {
+  if (!/^010\d{8}$/.test(req.body.phone)) {
     return res.status(400).send('전화번호가 올바르지 않습니다.');
   }
 

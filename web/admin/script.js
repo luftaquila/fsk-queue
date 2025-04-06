@@ -12,8 +12,46 @@ let notyf = new Notyf({
   }]
 });
 
+let entries = undefined;
+let inspections = undefined;
+let active = undefined;
+
 // init UI and event handlers
 window.addEventListener("DOMContentLoaded", async () => {
+  entries = await get('/entry/all');
+  inspections = await get('/queue/admin/all');
+
+  active = await get('/queue/active');
+
+  let types = '';
+  let list = '';
+
+  for (let item of active) {
+    types += `<div class="tab" id="${item.type}">${item.name}</div>`;
+    list += `<div class="tab-content" id="${item.type}-container"></div>`;
+  }
+
+  document.getElementById('tabs').innerHTML = types;
+  document.getElementById('tab-container').innerHTML = list;
+
+
+  console.log(entries);
+  console.log(inspections);
+  console.log(active);
+
+  document.addEventListener('click', async e => {
+    if (e.target.matches('.tab')) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      e.target.classList.add('active');
+      document.getElementById(`${e.target.id}-container`).classList.add('active');
+
+      let queue = await get(`/queue/admin/${e.target.id}`);
+      console.log(queue);
+
+    }
+  });
+
 
 });
 

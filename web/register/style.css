@@ -15,12 +15,130 @@
 body {
   margin: 0;
   width: 100%;
+  height: 100%;
   position: absolute;
   font-family: "Goorm Sans", "MonoplexKR", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 a {
   text-decoration: none;
   color: inherit;
+}
+
+h1 {
+  font-size: 3rem;
+  margin: 0;
+}
+
+div#container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3rem;
+}
+
+div#container > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5rem;
+}
+
+div#agree-container {
+  flex-direction: column;
+  gap: 0.5rem!important;
+}
+
+div#agree-container > p {
+  font-size: 1.2rem;
+  line-height: 2;
+  text-align: center;
+}
+
+input#entry, input#phone {
+  height: 4rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  font-size: 2rem;
+  text-align: center;
+  letter-spacing: 0.1rem;
+}
+
+input#entry {
+  width: 12rem;
+}
+
+input#phone {
+  width: 24rem;
+}
+
+input#agree {
+  font-size: 2rem;
+}
+
+label {
+  transform: scale(1.7);
+  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+input#entry:focus,
+input#phone:focus,
+select#inspection:focus {
+  outline: none;
+  border-width: 2px;
+  border-color: #007bff;
+}
+
+select#inspection {
+  width: 24rem;
+  height: 4rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  font-size: 2rem;
+  text-align: center;
+  background-color: #fff;
+}
+
+span#submit {
+  margin-bottom: 0.3rem;
+  width: 10rem;
+  height: 2.8rem;
+  line-height: 3rem;
+  border-radius: 0.5rem;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+span#submit i {
+  margin-right: 0.75rem;
+}
+
+div#team {
+  font-size: 2rem;
+  font-style: italic;
+  height: 2.5rem;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.notyf__toast {
+  width: max-content!important;
+  max-width: 30rem!important;
+  font-size: 1.5rem;
+  line-height: 2;
 }

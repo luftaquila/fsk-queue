@@ -12,8 +12,30 @@
 </head>
 
 <body>
-  <div>
-    <h1>🕰️ 검차 대기열 등록</h1>
+  <div id='container'>
+    <h1>검차 대기열 등록</h1>
+
+    <div id="team"></div>
+
+    <div>
+      <input type="number" id="entry" placeholder="엔트리" />
+      <input type="tel" id="phone" maxlength="13" placeholder="전화번호" />
+    </div>
+
+    <div>
+      <select id="inspection"></select>
+    </div>
+
+    <div id="agree-container">
+      <label for="agree">
+        <input id="agree" type="checkbox"> 전화번호 수집 및 이용 동의
+      </label>
+      <p>
+        전화번호는 검차 입장 알림을 위해 사용되며, 입장 시까지 보관됩니다.<br>
+        <b>앞에 대기중인 차량이 2대 남았을 때</b> 문자로 알림이 발송됩니다.
+      </p>
+      <span class="btn green" id="submit"><i class="fa fa-plus"></i>등록</span>
+    </div>
   </div>
 </body>
 
