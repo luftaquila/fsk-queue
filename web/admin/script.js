@@ -13,30 +13,61 @@ let notyf = new Notyf({
 });
 
 let entries = undefined;
-let inspections = undefined;
-let active = undefined;
+let refresh = undefined;
+let last = undefined;
 
 // init UI and event handlers
 window.addEventListener("DOMContentLoaded", async () => {
-  try {
-    entries = await get('/entry/all');
-    inspections = await get('/queue/admin/all');
+  // load entries
+  (async () => {
+    try {
+      entries = await get('/entry/all');
+    } catch (e) {
+      return notyf.error(`엔트리 정보를 가져오지 못했습니다.<br>${e.message}`);
+    }
+  })();
 
-    active = await get('/queue/active');
+  // draw tabs
+  (async () => {
+    try {
+      let active = await get('/queue/active');
+      let types = '';
+      let list = '';
 
-    let types = '';
-    let list = '';
+      for (let item of active) {
+        types += `<div class="tab" id="${item.type}">${item.name}</div>`;
+        list += `<table class="tab-content" id="${item.type}-table"></div>`;
+      }
 
-    for (let item of active) {
-      types += `<div class="tab" id="${item.type}">${item.name}</div>`;
-      list += `<table class="tab-content" id="${item.type}-table"></div>`;
+      document.getElementById('tabs').innerHTML = types;
+      document.getElementById('tab-container').innerHTML = list;
+
+      let prev = localStorage.getItem('current');
+      let target = document.getElementById(prev);
+
+      if (prev && target) {
+        target.click();
+      }
+    } catch (e) {
+      return notyf.error(`활성 대기열 정보를 가져오지 못했습니다.<br>${e.message}`);
+    }
+  })();
+
+  // draw advanced menu
+  (async () => {
+    try {
+    let inspections = await get('/queue/admin/all');
+    let html = '';
+
+    for (let item of inspections) {
+      html += `<div><label for='chk-${item.type}'><input type="checkbox" id="chk-${item.type}" class='activate' ${item.active ? 'checked' : ''}> ${item.name}</div></label>`;
     }
 
-    document.getElementById('tabs').innerHTML = types;
-    document.getElementById('tab-container').innerHTML = list;
-  } catch (e) {
-    return notyf.error(`서버에 연결할 수 없습니다.<br>${e.message}`);
-  }
+    document.getElementById('advanced').innerHTML = html;
+    } catch (e) {
+      return notyf.error(`대기열 정보를 가져오지 못했습니다.<br>${e.message}`);
+    }
+  })();
 });
 
 document.addEventListener('click', async e => {
@@ -46,24 +77,72 @@ document.addEventListener('click', async e => {
     e.target.classList.add('active');
     document.getElementById(`${e.target.id}-table`).classList.add('active');
 
+    refresh_queue(e.target.id);
+
+    if (refresh) {
+      clearInterval(refresh);
+    }
+
+    refresh = setInterval(() => refresh_queue(e.target.id), 5000);
+    localStorage.setItem('current', e.target.id);
+  }
+
+  else if (e.target.closest('.delete')) {
     try {
-      let queue = await get(`/queue/admin/${e.target.id}`);
+      let current = localStorage.getItem('current');
 
-      let html = '<tr>';
+      await post('DELETE', `/queue/admin/${current}`, {
+        num: e.target.closest('.delete').dataset.target
+      });
 
-      for (let item of queue) {
-        let entry = entries[item.num];
-        html += `<td><span class='btn red'><i class='fa fa-trash'></i></span></td>`;
-        html += `<td>${item.num}</td>`;
-        html += `<td>${entry.univ} ${entry.team}<br>${phone(item.phone)}</td></tr>`;
-      }
-
-      document.getElementById(`${e.target.id}-table`).innerHTML = html;
+      refresh_queue(current);
     } catch (e) {
-      return notyf.error(`서버에 연결할 수 없습니다.<br>${e.message}`);
+      return notyf.error(`엔트리를 삭제하지 못했습니다.<br>${e.message}`);
     }
   }
 });
+
+document.addEventListener('change', async e => {
+  if (e.target.matches('.activate')) {
+    try {
+      await post('POST', `/queue/admin/${e.target.id.replace('chk-', '')}`, {
+        active: e.target.checked
+      });
+    } catch (e) {
+      return notyf.error(`대기열 활성화 상태를 변경하지 못했습니다.<br>${e.message}`);
+    }
+  }
+});
+
+
+/*******************************************************************************
+ * functions                                                                   *
+ ******************************************************************************/
+async function refresh_queue(inspection) {
+  try {
+    let queue = await get(`/queue/admin/${inspection}`);
+    let html = '<tr>';
+
+    for (let item of queue) {
+      let entry = entries[item.num];
+      html += `<td><span class='btn red delete' data-target='${item.num}'><i class='fa fa-trash'></i></span></td>`;
+      html += `<td style='text-align: center;'>${item.num}</td>`;
+      html += `<td>${entry.univ} ${entry.team}<br>${phone(item.phone)}</td></tr>`;
+    }
+
+    document.getElementById(`${inspection}-table`).innerHTML = html;
+    document.getElementById('status').innerText = queue.length;
+
+    if (!last) {
+      last = new Date();
+      setInterval(() => document.getElementById('update').innerText = ((new Date() - last) / 1000).toFixed(0));
+    } else {
+      last = new Date();
+    }
+  } catch (e) {
+    return notyf.error(`대기열을 가져오지 못했습니다.<br>${e.message}`);
+  }
+}
 
 /*******************************************************************************
  * utility functions                                                           *
@@ -84,9 +163,9 @@ async function get(url) {
   }
 }
 
-async function post(url, data) {
+async function post(method, url, data) {
   const res = await fetch(url, {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });

@@ -28,10 +28,35 @@ div.container h1 {
   margin-left: 1.5rem;
 }
 
+h3 {
+  margin: 0.5rem 0;
+}
+
 #tabs {
   overflow-x: auto;
   white-space: nowrap;
   border-bottom: 1px solid #ccc;
+}
+
+#status-container,
+#advanced-container {
+  padding: 1rem;
+}
+
+#status-container {
+  padding: 1rem 1rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#advanced-container div,
+#advanced {
+  padding: 0.5rem;
+}
+
+#advanced div {
+  padding: 0.2rem 0.3rem;
 }
 
 .tab {
