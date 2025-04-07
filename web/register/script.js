@@ -14,19 +14,22 @@ let notyf = new Notyf({
 
 let entries = undefined;
 
-// init UI and event handlers
 window.addEventListener("DOMContentLoaded", async () => {
-  entries = await get('/entry/all');
+  try {
+    entries = await get('/entry/all');
 
-  let active = await get('/queue/active');
+    let active = await get('/queue/active');
 
-  let html = '<option value="" selected disabled>검차 선택</option>';
+    let html = '<option value="" selected disabled>검차 선택</option>';
 
-  for (let item of active) {
-    html += `<option value="${item.type}">${item.name}</option>`;
+    for (let item of active) {
+      html += `<option value="${item.type}">${item.name}</option>`;
+    }
+
+    document.getElementById('inspection').innerHTML = html;
+  } catch (e) {
+    return notyf.error(`엔트리 정보를 가져올 수 없습니다.<br>${e.message}`);
   }
-
-  document.getElementById('inspection').innerHTML = html;
 });
 
 document.getElementById('entry').addEventListener('input', e => {

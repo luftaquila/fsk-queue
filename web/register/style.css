@@ -128,6 +128,7 @@ div#team {
   font-size: 2rem;
   font-style: italic;
   height: 2.5rem;
+  text-align: center;
 }
 
 input::-webkit-outer-spin-button,
@@ -141,4 +142,10 @@ input::-webkit-inner-spin-button {
   max-width: 30rem!important;
   font-size: 1.5rem;
   line-height: 2;
+}
+
+@media(max-width: 768px) {
+  body {
+    zoom: 0.5;
+  }
 }

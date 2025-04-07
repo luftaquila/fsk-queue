@@ -12,9 +12,42 @@
 </head>
 
 <body>
-  <div>
-    <h1>💡 검차 대기열 조회</h1>
-  </div>
+  <div id='container'>
+    <h1>💡 검차 순번 조회</h1>
+
+    <div>
+      <input type="number" id="entry" placeholder="엔트리" />
+      <input type="tel" id="phone" maxlength="13" placeholder="전화번호" />
+      <span class="btn green" id="check"><i class="fa fa-magnifying-glass"></i> 조회</span>
+    </div>
+
+    <div id="team"></div>
+
+    <table id="status">
+      <tr>
+        <td>검차</td>
+        <td>:</td>
+        <th id="queue">-</th>
+      </tr>
+      <tr>
+        <td>순번</td>
+        <td>:</td>
+        <th id="rank">-</th>
+      </tr>
+    </table>
+
+    <h3>🛎️ 실시간 대기열 현황</h3>
+
+    <table id='active'></table>
+
+    <div>
+      <span>마지막 업데이트 : <span id="update">-</span> 초 전</span>
+    </div>
+
+    <div id="tips">
+      전화번호는 등록 시 입력한 알림 받을 번호입니다.<br>
+      10초마다 내 순번과 전체 대기열 현황이 모두 새로고침됩니다.
+    </div>
 </body>
 
 <script src='node_modules/notyf/notyf.min.js'></script>

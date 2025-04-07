@@ -61,7 +61,7 @@ app.get('/active', async (req, res) => {
 app.get('/state/:num', async (req, res) => {
   let num = Number(req.params.num);
 
-  if (req.body.num === '' || Number.isNaN(num) || num < 0 || entries[num] === undefined) {
+  if (req.params.num === '' || Number.isNaN(num) || num < 0 || entries[num] === undefined) {
     return res.status(400).send('엔트리 번호가 올바르지 않습니다.');
   }
 
@@ -74,12 +74,12 @@ app.get('/state/:num', async (req, res) => {
 
     for (let i = 0; i < db[current].data.length; i++) {
       if (db[current].data[i].num === num) {
-        if (db[current].data[i].phone != req.body.phone) {
+        if (db[current].data[i].phone != req.query.phone) {
           return res.status(400).send('전화번호가 일치하지 않습니다.');
         }
 
         return res.json({
-          queue: current,
+          queue: db.main.data[current].name,
           rank: i + 1,
         });
       }
