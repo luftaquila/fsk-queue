@@ -158,7 +158,7 @@ app.post('/register/:type', async (req, res) => {
   let num = Number(req.body.num);
 
   if (!db[req.params.type]) {
-    return res.status(400).send('');
+    return res.status(400).send('존재하지 않는 대기열입니다.');
   }
 
   if (req.body.num === '' || Number.isNaN(num) || num < 0 || entries[num] === undefined) {
@@ -169,17 +169,22 @@ app.post('/register/:type', async (req, res) => {
     return res.status(400).send('전화번호가 올바르지 않습니다.');
   }
 
-  await db[req.params.type].read();
+  await db.main.read();
+
+  if (!db.main.data[req.params.type].active) {
+    return res.status(400).send('대기열이 비활성화 상태입니다.');
+  }
+
   await db.current.read();
 
   if (db.current.data[num]) {
     return res.status(400).send(`이미 ${db.main.data[db.current.data[num]].name} 대기열에 등록된 엔트리입니다.`);
   }
 
+  await db[req.params.type].read();
   db[req.params.type].data.push({ num, phone: req.body.phone });
   await db[req.params.type].write();
 
-  await db.main.read();
   db.main.data[req.params.type].length = db[req.params.type].data.length;
   await db.main.write();
 
