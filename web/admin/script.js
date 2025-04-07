@@ -13,13 +13,12 @@ let notyf = new Notyf({
 });
 
 let entries = undefined;
-let refresh = undefined;
 let last = undefined;
 
 // init UI and event handlers
 window.addEventListener("DOMContentLoaded", async () => {
   // load entries
-  (async () => {
+  await (async () => {
     try {
       entries = await get('/entry/all');
     } catch (e) {
@@ -27,34 +26,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   })();
 
-  // draw tabs
-  (async () => {
-    try {
-      let active = await get('/queue/active');
-      let types = '';
-      let list = '';
-
-      for (let item of active) {
-        types += `<div class="tab" id="${item.type}">${item.name}</div>`;
-        list += `<table class="tab-content" id="${item.type}-table"></div>`;
-      }
-
-      document.getElementById('tabs').innerHTML = types;
-      document.getElementById('tab-container').innerHTML = list;
-
-      let prev = localStorage.getItem('current');
-      let target = document.getElementById(prev);
-
-      if (prev && target) {
-        target.click();
-      }
-    } catch (e) {
-      return notyf.error(`활성 대기열 정보를 가져오지 못했습니다.<br>${e.message}`);
-    }
-  })();
-
   // draw advanced menu
-  (async () => {
+  await (async () => {
     try {
     let inspections = await get('/queue/admin/all');
     let html = '';
@@ -68,6 +41,9 @@ window.addEventListener("DOMContentLoaded", async () => {
       return notyf.error(`대기열 정보를 가져오지 못했습니다.<br>${e.message}`);
     }
   })();
+
+  await refresh();
+  setInterval(refresh, 5000);
 });
 
 document.addEventListener('click', async e => {
@@ -77,14 +53,8 @@ document.addEventListener('click', async e => {
     e.target.classList.add('active');
     document.getElementById(`${e.target.id}-table`).classList.add('active');
 
-    refresh_queue(e.target.id);
-
-    if (refresh) {
-      clearInterval(refresh);
-    }
-
-    refresh = setInterval(() => refresh_queue(e.target.id), 5000);
     localStorage.setItem('current', e.target.id);
+    refresh_queue(e.target.id);
   }
 
   else if (e.target.closest('.delete')) {
@@ -118,6 +88,45 @@ document.addEventListener('change', async e => {
 /*******************************************************************************
  * functions                                                                   *
  ******************************************************************************/
+async function refresh() {
+  // draw tabs
+  try {
+    let active = await get('/queue/active');
+
+    if (active.length) {
+      let types = '';
+      let list = '';
+
+      document.querySelectorAll(('.activate')).forEach(item => item.checked = false);
+
+      for (let item of active) {
+        types += `<div class="tab" id="${item.type}">${item.name}</div>`;
+        list += `<table class="tab-content" id="${item.type}-table"></div>`;
+        document.getElementById(`chk-${item.type}`).checked = true;
+      }
+
+      document.getElementById('tabs').innerHTML = types;
+      document.getElementById('tab-container').innerHTML = list;
+
+      let prev = localStorage.getItem('current');
+      let target = document.getElementById(prev);
+
+      if (prev && target) {
+        target.click();
+      }
+    }
+
+    if (!last) {
+      last = new Date();
+      setInterval(() => document.getElementById('update').innerText = ((new Date() - last) / 1000).toFixed(0));
+    } else {
+      last = new Date();
+    }
+  } catch (e) {
+    return notyf.error(`활성 대기열 정보를 가져오지 못했습니다.<br>${e.message}`);
+  }
+}
+
 async function refresh_queue(inspection) {
   try {
     let queue = await get(`/queue/admin/${inspection}`);
