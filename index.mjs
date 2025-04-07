@@ -30,15 +30,6 @@ const db = {
 
 await db.main.read();
 
-let entries = undefined;
-http.get('http://fsk-entry:5000/all', res => {
-  let data = '';
-  res.on('data', chunk => data += chunk);
-  res.on('end', () => {
-    entries = JSON.parse(data);
-  });
-});
-
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(pwd, 'web')));
@@ -62,6 +53,8 @@ app.get('/active', async (req, res) => {
 // return inspection queue state
 app.get('/state/:num', async (req, res) => {
   let num = Number(req.params.num);
+
+  let entries = await get_entry();
 
   if (req.params.num === '' || Number.isNaN(num) || num < 0 || entries[num] === undefined) {
     return res.status(400).send('엔트리 번호가 올바르지 않습니다.');
@@ -208,6 +201,8 @@ app.post('/register/:type', async (req, res) => {
     return res.status(400).send('존재하지 않는 대기열입니다.');
   }
 
+  let entries = await get_entry();
+
   if (req.body.num === '' || Number.isNaN(num) || num < 0 || entries[num] === undefined) {
     return res.status(400).send('엔트리 번호가 올바르지 않습니다.');
   }
@@ -240,3 +235,21 @@ app.post('/register/:type', async (req, res) => {
 
   res.status(201).send();
 });
+
+async function get_entry() {
+  return await new Promise((resolve, reject) => {
+    http.get('http://fsk-entry:5000/all', res => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        }
+        catch (e) {
+          reject(e);
+        }
+      });
+      res.on('error', e => reject(e));
+    }).on('error', e => reject(e));
+  });
+}
