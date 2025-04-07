@@ -138,8 +138,8 @@ input::-webkit-inner-spin-button {
 }
 
 .notyf__toast {
-  width: max-content!important;
-  max-width: 30rem!important;
+  min-width: 25rem!important;
+  max-width: 40rem!important;
   font-size: 1.5rem;
   line-height: 2;
 }

@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
+import https from 'https';
+import crypto from 'crypto';
 import express from 'express'
 import pinoHttp from 'pino-http';
 import { JSONFilePreset } from 'lowdb/node';
@@ -134,6 +136,8 @@ app.delete('/admin/:type', async (req, res) => {
 
   await db[req.params.type].read();
 
+  let prev_3rd = db[req.params.type].data[2];
+
   db[req.params.type].data = db[req.params.type].data.filter(x => x.num !== num);
   await db[req.params.type].write();
 
@@ -150,7 +154,50 @@ app.delete('/admin/:type', async (req, res) => {
     await db.main.write();
   }
 
-  // TODO: send sms to next entry
+  // send SMS to third waiter
+  if (process.env.NAVER_CLOUD_ACCESS_KEY && process.env.NAVER_CLOUD_SECRET_KEY &&
+      process.env.NAVER_CLOUD_SMS_SERVICE_ID && process.env.PHONE_NUMBER_SMS_SENDER) {
+    let target = db[req.params.type].data[2];
+
+    if (target && target.num !== prev_3rd.num) {
+      let payload = {
+        hostname: 'sens.apigw.ntruss.com',
+        port: 443,
+        path: `/sms/v2/services/${process.env.NAVER_CLOUD_SMS_SERVICE_ID}/messages`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'x-ncp-apigw-timestamp': Date.now(),
+          'x-ncp-iam-access-key': process.env.NAVER_CLOUD_ACCESS_KEY,
+          'x-ncp-apigw-signature-v2': ''
+        }
+      };
+
+      let secret = crypto.createHmac('sha256', process.env.NAVER_CLOUD_SECRET_KEY)
+        .update(`${payload.method} ${payload.path}\n${payload.headers['x-ncp-apigw-timestamp']}\n${process.env.NAVER_CLOUD_ACCESS_KEY}`)
+        .digest('base64');
+
+      payload.headers['x-ncp-apigw-signature-v2'] = secret;
+
+      let sms = https.request(payload, res => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          console.log(data);
+        });
+      });
+
+      sms.on('error', e => console.error(e));
+
+      sms.write(JSON.stringify({
+        type: 'SMS',
+        from: process.env.PHONE_NUMBER_SMS_SENDER,
+        content: `FSK ${new Date().getFullYear()} ${db.main.data[req.params.type].name} 검차 입장 대기 3번째 순서입니다. 차량과 함께 검차장에서 대기해 주세요.`,
+        messages: [{ to: target.phone }]
+      }));
+      sms.end();
+    }
+  }
 });
 
 // enqueue new entry

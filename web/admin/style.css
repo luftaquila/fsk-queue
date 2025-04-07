@@ -32,6 +32,10 @@ h3 {
   margin: 0.5rem 0;
 }
 
+summary {
+  cursor: pointer;
+}
+
 #tabs {
   overflow-x: auto;
   white-space: nowrap;
@@ -90,4 +94,9 @@ h3 {
 
 .tab-content td .btn {
   padding: 0.3rem 1rem 0;
+}
+
+.notyf__toast {
+  min-width: 25rem!important;
+  max-width: 40rem!important;
 }
