@@ -42,7 +42,7 @@ app.use((req, res, next) => {
 });
 app.use(pinoHttp({ stream: fs.createWriteStream('./app.log', { flags: 'a' }) }));
 
-app.listen(7000);
+app.listen(6000);
 
 // return active inspections
 app.get('/active', async (req, res) => {
