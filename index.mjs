@@ -263,7 +263,7 @@ app.delete('/admin/:type', (req, res) => {
     sms.write(JSON.stringify({
       type: 'SMS',
       from: process.env.PHONE_NUMBER_SMS_SENDER,
-      content: `FSK ${new Date().getFullYear()} ${inspections[req.params.type]} 검차 입장 대기 3번째 순서입니다. 차량과 함께 검차장에서 대기해 주세요.`,
+      content: `[FSK ${new Date().getFullYear()}]\n엔트리 ${target.num}번 ${inspections[req.params.type]} 검차 대기 순서 3번입니다.\n차량과 함께 검차장으로 오세요.`,
       messages: [{ to: target.phone }]
     }));
     sms.end();
