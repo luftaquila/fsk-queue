@@ -75,7 +75,7 @@ document.addEventListener('click', async e => {
 document.addEventListener('change', async e => {
   if (e.target.matches('.activate')) {
     try {
-      await post('POST', `/queue/admin/${e.target.id.replace('chk-', '')}`, {
+      await post('PATCH', `/queue/admin/${e.target.id.replace('chk-', '')}`, {
         active: e.target.checked
       });
     } catch (e) {
@@ -108,10 +108,10 @@ async function refresh() {
       document.getElementById('tabs').innerHTML = types;
       document.getElementById('tab-container').innerHTML = list;
 
-      let prev = localStorage.getItem('current');
-      let target = document.getElementById(prev);
+      let current = localStorage.getItem('current');
+      let target = document.getElementById(current);
 
-      if (prev && target) {
+      if (current && target) {
         target.click();
       }
     }
