@@ -80,11 +80,10 @@ summary {
 
 .tab-content {
   padding: 0.5rem;
-  display: none;
 }
 
-.tab-content.active {
-  display: table;
+.hidden {
+  display: none;
 }
 
 .tab-content td {

@@ -26,17 +26,24 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   })();
 
-  // draw advanced menu
+  // draw tabs, contents and advanced menu
   await (async () => {
     try {
       let inspections = await get('/queue/admin/all');
-      let html = '';
+
+      let tabs = '';
+      let contents = '';
+      let advanced = '';
 
       for (let item of inspections) {
-        html += `<div><label for='chk-${item.type}'><input type="checkbox" id="chk-${item.type}" class='activate' ${item.active ? 'checked' : ''}> ${item.name}</div></label>`;
+        tabs += `<div class="tab" id="${item.type}" class="${item.active ? '': 'hidden'}">${item.name}</div>`;
+        contents += `<table class="tab-content" id="${item.type}-table" class="${item.active ? '' : 'hidden'}"></div>`;
+        advanced += `<div><label for='chk-${item.type}'><input type="checkbox" id="chk-${item.type}" class='activate' ${item.active ? 'checked' : ''}> ${item.name}</div></label>`;
       }
 
-      document.getElementById('advanced').innerHTML = html;
+      document.getElementById('tabs').innerHTML = tabs;
+      document.getElementById('tab-container').innerHTML = contents;
+      document.getElementById('advanced').innerHTML = advanced;
 
       let sms = await get('/queue/settings/sms');
       document.getElementById('sms').checked = sms.value;
@@ -52,9 +59,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 document.addEventListener('click', async e => {
   if (e.target.matches('.tab')) {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+
     e.target.classList.add('active');
-    document.getElementById(`${e.target.id}-table`).classList.add('active');
+    document.getElementById(`${e.target.id}-table`).classList.remove('hidden');
 
     localStorage.setItem('current', e.target.id);
     refresh_queue(e.target.id);
@@ -111,19 +119,14 @@ async function refresh() {
     let active = await get('/queue/active');
 
     if (active.length) {
-      let types = '';
-      let list = '';
-
+      // TODO: update
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.add('hidden'));
       document.querySelectorAll('.activate').forEach(item => item.checked = false);
 
       for (let item of active) {
-        types += `<div class="tab" id="${item.type}">${item.name}</div>`;
-        list += `<table class="tab-content" id="${item.type}-table"></div>`;
+        document.getElementById(item.type).classList.remove('hidden');
         document.getElementById(`chk-${item.type}`).checked = true;
       }
-
-      document.getElementById('tabs').innerHTML = types;
-      document.getElementById('tab-container').innerHTML = list;
 
       let current = localStorage.getItem('current');
       let target = document.getElementById(current);
@@ -138,6 +141,9 @@ async function refresh() {
     if (current) {
       await refresh_queue(current);
     }
+
+    let sms = await get('/queue/settings/sms');
+    document.getElementById('sms').checked = sms.value;
 
     if (!last) {
       last = new Date();
