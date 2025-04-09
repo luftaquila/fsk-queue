@@ -256,24 +256,47 @@ app.delete('/admin/:type', (req, res) => {
     const sms = https.request(payload, res => {
       let data = '';
       res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        console.log(data);
-      });
+      res.on('end', () => console.log(data));
     });
 
     sms.on('error', e => console.error(e));
     sms.write(JSON.stringify({
       type: 'SMS',
       from: process.env.PHONE_NUMBER_SMS_SENDER,
-      content: `FSK ${new Date().getFullYear()} ${db.main.data[req.params.type].name} 검차 입장 대기 3번째 순서입니다. 차량과 함께 검차장에서 대기해 주세요.`,
+      content: `FSK ${new Date().getFullYear()} ${inspections[req.params.type]} 검차 입장 대기 3번째 순서입니다. 차량과 함께 검차장에서 대기해 주세요.`,
       messages: [{ to: target.phone }]
     }));
     sms.end();
   }
 });
 
+// get sms configuration
+app.get('/settings/sms', (req, res) => {
+  try {
+    const sms = db.prepare('SELECT value FROM settings WHERE key = ?').get('sms');
+    res.json({ value: sms.value === 'TRUE' });
+  } catch (e) {
+    return res.status(500).send(`DB 오류: ${e}`);
+  }
+});
 
+// update sms configuration
+app.patch('/settings/sms', (req, res) => {
+  try {
+    if (req.body.value === true) {
+      if (!process.env.NAVER_CLOUD_ACCESS_KEY ||
+        !process.env.NAVER_CLOUD_SECRET_KEY ||
+        !process.env.NAVER_CLOUD_SMS_SERVICE_ID ||
+        !process.env.PHONE_NUMBER_SMS_SENDER) {
+        return res.status(400).send('SMS 환경 변수가 설정되지 않았습니다.');
+      }
+    }
 
+    db.prepare('UPDATE settings SET value = ? WHERE key = ?').run(req.body.value === true ? 'TRUE' : 'FALSE', 'sms');
+    res.status(200).send();
+  } catch (e) {
+    return res.status(500).send(`DB 오류: ${e}`);
+  }
 });
 
 async function get_entry() {

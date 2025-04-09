@@ -29,14 +29,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   // draw advanced menu
   await (async () => {
     try {
-    let inspections = await get('/queue/admin/all');
-    let html = '';
+      let inspections = await get('/queue/admin/all');
+      let html = '';
 
-    for (let item of inspections) {
-      html += `<div><label for='chk-${item.type}'><input type="checkbox" id="chk-${item.type}" class='activate' ${item.active ? 'checked' : ''}> ${item.name}</div></label>`;
-    }
+      for (let item of inspections) {
+        html += `<div><label for='chk-${item.type}'><input type="checkbox" id="chk-${item.type}" class='activate' ${item.active ? 'checked' : ''}> ${item.name}</div></label>`;
+      }
 
-    document.getElementById('advanced').innerHTML = html;
+      document.getElementById('advanced').innerHTML = html;
+
+      let sms = await get('/queue/settings/sms');
+      document.getElementById('sms').checked = sms.value;
     } catch (e) {
       return notyf.error(`대기열 정보를 가져오지 못했습니다.<br>${e.message}`);
     }
@@ -78,8 +81,22 @@ document.addEventListener('change', async e => {
       await post('PATCH', `/queue/admin/${e.target.id.replace('chk-', '')}`, {
         active: e.target.checked
       });
+      refresh();
     } catch (e) {
       return notyf.error(`대기열 활성화 상태를 변경하지 못했습니다.<br>${e.message}`);
+    }
+  } else if (e.target.matches('#sms')) {
+    try {
+      await post('PATCH', '/queue/settings/sms', {
+        value: e.target.checked
+      });
+
+      let sms = await get('/queue/settings/sms');
+      document.getElementById('sms').checked = sms.value;
+
+      notyf.success('SMS 설정을 변경했습니다.');
+    } catch (e) {
+      return notyf.error(`SMS 설정을 변경하지 못했습니다.<br>${e.message}`);
     }
   }
 });
@@ -97,7 +114,7 @@ async function refresh() {
       let types = '';
       let list = '';
 
-      document.querySelectorAll(('.activate')).forEach(item => item.checked = false);
+      document.querySelectorAll('.activate').forEach(item => item.checked = false);
 
       for (let item of active) {
         types += `<div class="tab" id="${item.type}">${item.name}</div>`;
@@ -114,6 +131,12 @@ async function refresh() {
       if (current && target) {
         target.click();
       }
+    }
+
+    let current = localStorage.getItem('current');
+
+    if (current) {
+      await refresh_queue(current);
     }
 
     if (!last) {
@@ -141,13 +164,6 @@ async function refresh_queue(inspection) {
 
     document.getElementById(`${inspection}-table`).innerHTML = html;
     document.getElementById('status').innerText = queue.length;
-
-    if (!last) {
-      last = new Date();
-      setInterval(() => document.getElementById('update').innerText = ((new Date() - last) / 1000).toFixed(0));
-    } else {
-      last = new Date();
-    }
   } catch (e) {
     return notyf.error(`대기열을 가져오지 못했습니다.<br>${e.message}`);
   }
@@ -180,7 +196,7 @@ async function post(method, url, data) {
   });
 
   if (!res.ok) {
-    throw new Error(`failed to post: ${await res.text()}`);
+    throw new Error(await res.text());
   }
 }
 
