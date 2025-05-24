@@ -281,7 +281,7 @@ app.get('/settings/sms', (req, res) => {
 });
 
 // update sms configuration
-app.patch('/settings/sms', (req, res) => {
+app.patch('/admin/settings/sms', (req, res) => {
   try {
     if (req.body.value === true) {
       if (!process.env.NAVER_CLOUD_ACCESS_KEY ||

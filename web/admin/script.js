@@ -95,7 +95,7 @@ document.addEventListener('change', async e => {
     }
   } else if (e.target.matches('#sms')) {
     try {
-      await post('PATCH', '/queue/settings/sms', {
+      await post('PATCH', '/queue/admin/settings/sms', {
         value: e.target.checked
       });
 
