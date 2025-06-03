@@ -119,7 +119,6 @@ async function refresh() {
     let active = await get('/queue/active');
 
     if (active.length) {
-      // TODO: update
       document.querySelectorAll('.tab').forEach(tab => tab.classList.add('hidden'));
       document.querySelectorAll('.activate').forEach(item => item.checked = false);
 

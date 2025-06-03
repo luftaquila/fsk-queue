@@ -1,0 +1,73 @@
+@font-face {
+  font-family: 'Goorm Sans';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408@1.0/goorm-sans-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Goorm Sans';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408@1.0/goorm-sans-medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  position: absolute;
+  font-family: "Goorm Sans", "MonoplexKR", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+i {
+  margin-right: 0.2rem;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.btn {
+  line-height: 1.5rem;
+}
+
+div.container,
+div.container > div,
+div.container > div > div {
+  margin-left: 1.5rem;
+}
+
+.hidden {
+  display: none;
+}
+
+.notyf__toast {
+  min-width: 25rem!important;
+  max-width: 40rem!important;
+}
+
+#team {
+  height: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#entry {
+  height: 1.5rem;
+  width: 3rem;
+  margin-right: 1rem;
+  text-align: center;
+}
+
+#inspection{
+  height: 2rem;
+  width: 5rem;
+  margin-right: 1rem;
+  text-align: center;
+}
