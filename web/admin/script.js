@@ -29,7 +29,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // draw tabs, contents and advanced menu
   await (async () => {
     try {
-      let inspections = await get('/queue/admin/all');
+      let inspections = await get('/queue/api/admin/all');
 
       let tabs = '';
       let contents = '';
@@ -45,7 +45,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       document.getElementById('tab-container').innerHTML = contents;
       document.getElementById('advanced').innerHTML = advanced;
 
-      let sms = await get('/queue/settings/sms');
+      let sms = await get('/queue/api/settings/sms');
       document.getElementById('sms').checked = sms.value;
     } catch (e) {
       return notyf.error(`대기열 정보를 가져오지 못했습니다.<br>${e.message}`);
@@ -72,7 +72,7 @@ document.addEventListener('click', async e => {
     try {
       let current = localStorage.getItem('current');
 
-      await post('DELETE', `/queue/admin/${current}`, {
+      await post('DELETE', `/queue/api/admin/${current}`, {
         num: e.target.closest('.delete').dataset.target
       });
 
@@ -86,7 +86,7 @@ document.addEventListener('click', async e => {
 document.addEventListener('change', async e => {
   if (e.target.matches('.activate')) {
     try {
-      await post('PATCH', `/queue/admin/${e.target.id.replace('chk-', '')}`, {
+      await post('PATCH', `/queue/api/admin/${e.target.id.replace('chk-', '')}`, {
         active: e.target.checked
       });
       refresh();
@@ -95,11 +95,11 @@ document.addEventListener('change', async e => {
     }
   } else if (e.target.matches('#sms')) {
     try {
-      await post('PATCH', '/queue/admin/settings/sms', {
+      await post('PATCH', '/queue/api/admin/settings/sms', {
         value: e.target.checked
       });
 
-      let sms = await get('/queue/settings/sms');
+      let sms = await get('/queue/api/settings/sms');
       document.getElementById('sms').checked = sms.value;
 
       notyf.success('SMS 설정을 변경했습니다.');
@@ -116,7 +116,7 @@ document.addEventListener('change', async e => {
 async function refresh() {
   // draw tabs
   try {
-    let active = await get('/queue/active');
+    let active = await get('/queue/api/active');
 
     if (active.length) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.add('hidden'));
@@ -141,7 +141,7 @@ async function refresh() {
       await refresh_queue(current);
     }
 
-    let sms = await get('/queue/settings/sms');
+    let sms = await get('/queue/api/settings/sms');
     document.getElementById('sms').checked = sms.value;
 
     if (!last) {
@@ -157,7 +157,7 @@ async function refresh() {
 
 async function refresh_queue(inspection) {
   try {
-    let queue = await get(`/queue/admin/${inspection}`);
+    let queue = await get(`/queue/api/admin/${inspection}`);
     let html = '<tr>';
 
     for (let item of queue) {

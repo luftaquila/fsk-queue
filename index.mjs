@@ -77,7 +77,7 @@ app.use(pinoHttp({ stream: fs.createWriteStream('./data/queue.log', { flags: 'a'
 app.listen(6000);
 
 // return active inspections
-app.get('/active', (req, res) => {
+app.get('/api/active', (req, res) => {
   try {
     res.json(db.prepare('SELECT * FROM inspection WHERE active = TRUE').all());
   } catch (e) {
@@ -86,7 +86,7 @@ app.get('/active', (req, res) => {
 });
 
 // return inspection queue state
-app.get('/state/:num', async (req, res) => {
+app.get('/api/state/:num', async (req, res) => {
   const num = Number(req.params.num);
 
   try {
@@ -119,7 +119,7 @@ app.get('/state/:num', async (req, res) => {
 });
 
 // return all inspections
-app.get('/admin/all', (req, res) => {
+app.get('/api/admin/all', (req, res) => {
   try {
     res.json(db.prepare('SELECT * FROM inspection').all());
   } catch (e) {
@@ -128,7 +128,7 @@ app.get('/admin/all', (req, res) => {
 });
 
 // return inspection queue
-app.get('/admin/:type', (req, res) => {
+app.get('/api/admin/:type', (req, res) => {
   try {
     res.json(db.prepare(`SELECT * FROM ${req.params.type} ORDER BY timestamp ASC`).all());
   } catch (e) {
@@ -137,7 +137,7 @@ app.get('/admin/:type', (req, res) => {
 });
 
 // toggle inspection active state
-app.patch('/admin/:type', (req, res) => {
+app.patch('/api/admin/:type', (req, res) => {
   try {
     db.prepare('UPDATE inspection SET active = ? WHERE type = ?').run(req.body.active === true ? 1 : 0, req.params.type);
     res.status(200).send();
@@ -147,7 +147,7 @@ app.patch('/admin/:type', (req, res) => {
 });
 
 // enqueue new entry
-app.post('/register/:type', async (req, res) => {
+app.post('/api/admin/register/:type', async (req, res) => {
   if (!/^010\d{8}$/.test(req.body.phone)) {
     return res.status(400).send('전화번호가 올바르지 않습니다.');
   }
@@ -187,7 +187,7 @@ app.post('/register/:type', async (req, res) => {
 });
 
 // delete entry
-app.delete('/admin/:type', (req, res) => {
+app.delete('/api/admin/:type', (req, res) => {
   const num = Number(req.body.num);
 
   if (req.body.num === '' || Number.isNaN(num) || num < 0) {
@@ -271,7 +271,7 @@ app.delete('/admin/:type', (req, res) => {
 });
 
 // get sms configuration
-app.get('/settings/sms', (req, res) => {
+app.get('/api/settings/sms', (req, res) => {
   try {
     const sms = db.prepare('SELECT value FROM settings WHERE key = ?').get('sms');
     res.json({ value: sms.value === 'TRUE' });
@@ -281,7 +281,7 @@ app.get('/settings/sms', (req, res) => {
 });
 
 // update sms configuration
-app.patch('/admin/settings/sms', (req, res) => {
+app.patch('/api/admin/settings/sms', (req, res) => {
   try {
     if (req.body.value === true) {
       if (!process.env.NAVER_CLOUD_ACCESS_KEY ||

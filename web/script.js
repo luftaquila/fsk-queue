@@ -54,7 +54,7 @@ document.getElementById('check').addEventListener('click', query);
 
 async function refresh() {
   try {
-    let active = await get('/queue/active');
+    let active = await get('/queue/api/active');
     let html = '';
 
     for (let item of active) {
@@ -101,7 +101,7 @@ async function query() {
   }
 
   try {
-    let result = await get(`/queue/state/${data.num}?phone=${data.phone}`);
+    let result = await get(`/queue/api/state/${data.num}?phone=${data.phone}`);
 
     if (result.rank === -1) {
       return err('대기중인 검차가 없습니다');
