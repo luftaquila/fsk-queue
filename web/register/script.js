@@ -18,7 +18,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   try {
     entries = await get('/entry/all');
 
-    let active = await get('/queue/active');
+    let active = await get('/queue/api/active');
 
     let html = '<option value="" selected disabled>검차 선택</option>';
 
@@ -81,7 +81,7 @@ document.getElementById('submit').addEventListener('click', async () => {
   }
 
   try {
-    await post(`/queue/register/${type}`, data);
+    await post(`/queue/api/admin/register/${type}`, data);
 
     document.getElementById('entry').value = '';
     document.getElementById('phone').value = '';

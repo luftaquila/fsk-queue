@@ -27,6 +27,11 @@ db.transaction(() => {
     active BOOLEAN NOT NULL DEFAULT TRUE
   );`);
 
+  db.exec(`CREATE TABLE IF NOT EXISTS priority (
+    num INTEGER NOT NULL,
+    inspection TEXT NOT NULL
+  );`);
+
   db.exec(`CREATE TABLE IF NOT EXISTS current (
     num INTEGER PRIMARY KEY,
     phone TEXT NOT NULL,
@@ -77,7 +82,7 @@ app.use(pinoHttp({ stream: fs.createWriteStream('./data/queue.log', { flags: 'a'
 app.listen(6000);
 
 // return active inspections
-app.get('/active', (req, res) => {
+app.get('/api/active', (req, res) => {
   try {
     res.json(db.prepare('SELECT * FROM inspection WHERE active = TRUE').all());
   } catch (e) {
@@ -86,7 +91,7 @@ app.get('/active', (req, res) => {
 });
 
 // return inspection queue state
-app.get('/state/:num', async (req, res) => {
+app.get('/api/state/:num', async (req, res) => {
   const num = Number(req.params.num);
 
   try {
@@ -110,7 +115,12 @@ app.get('/state/:num', async (req, res) => {
       return res.status(400).send('전화번호가 일치하지 않습니다.');
     }
 
-    const rank = db.prepare(`SELECT COUNT(*) AS rank FROM ${entry.inspection} WHERE timestamp <= (SELECT timestamp FROM ${entry.inspection} WHERE num = ?)`).get(num).rank;
+    const rank = db.prepare(`SELECT sub.rank FROM (
+        SELECT t.*, CASE WHEN p.num IS NOT NULL THEN 1 ELSE 0 END AS priority,
+        ROW_NUMBER() OVER (ORDER BY (p.num IS NULL), t.timestamp ASC) AS rank
+        FROM ${entry.inspection} AS t
+        LEFT JOIN priority AS p ON t.num = p.num AND p.inspection = ?
+      ) AS sub WHERE sub.num = ?`).get(entry.inspection, num).rank;
 
     res.json({ queue: inspections[entry.inspection], rank: rank });
   } catch (e) {
@@ -119,7 +129,7 @@ app.get('/state/:num', async (req, res) => {
 });
 
 // return all inspections
-app.get('/admin/all', (req, res) => {
+app.get('/api/admin/all', (req, res) => {
   try {
     res.json(db.prepare('SELECT * FROM inspection').all());
   } catch (e) {
@@ -128,16 +138,22 @@ app.get('/admin/all', (req, res) => {
 });
 
 // return inspection queue
-app.get('/admin/:type', (req, res) => {
+app.get('/api/admin/inspection/:type', (req, res) => {
   try {
-    res.json(db.prepare(`SELECT * FROM ${req.params.type} ORDER BY timestamp ASC`).all());
+    const result = db.prepare(`
+      SELECT t.*, CASE WHEN p.num IS NOT NULL THEN 1 ELSE 0 END AS priority
+      FROM ${req.params.type} AS t
+      LEFT JOIN priority AS p ON t.num = p.num AND p.inspection = ?
+      ORDER BY (p.num IS NULL), t.timestamp ASC`).all(req.params.type);
+
+    res.json(result);
   } catch (e) {
     return res.status(500).send(`DB 오류: ${e}`);
   }
 });
 
 // toggle inspection active state
-app.patch('/admin/:type', (req, res) => {
+app.patch('/api/admin/inspection/:type', (req, res) => {
   try {
     db.prepare('UPDATE inspection SET active = ? WHERE type = ?').run(req.body.active === true ? 1 : 0, req.params.type);
     res.status(200).send();
@@ -147,7 +163,7 @@ app.patch('/admin/:type', (req, res) => {
 });
 
 // enqueue new entry
-app.post('/register/:type', async (req, res) => {
+app.post('/api/admin/register/:type', async (req, res) => {
   if (!/^010\d{8}$/.test(req.body.phone)) {
     return res.status(400).send('전화번호가 올바르지 않습니다.');
   }
@@ -187,7 +203,7 @@ app.post('/register/:type', async (req, res) => {
 });
 
 // delete entry
-app.delete('/admin/:type', (req, res) => {
+app.delete('/api/admin/register/:type', (req, res) => {
   const num = Number(req.body.num);
 
   if (req.body.num === '' || Number.isNaN(num) || num < 0) {
@@ -271,7 +287,7 @@ app.delete('/admin/:type', (req, res) => {
 });
 
 // get sms configuration
-app.get('/settings/sms', (req, res) => {
+app.get('/api/settings/sms', (req, res) => {
   try {
     const sms = db.prepare('SELECT value FROM settings WHERE key = ?').get('sms');
     res.json({ value: sms.value === 'TRUE' });
@@ -281,7 +297,7 @@ app.get('/settings/sms', (req, res) => {
 });
 
 // update sms configuration
-app.patch('/admin/settings/sms', (req, res) => {
+app.patch('/api/admin/settings/sms', (req, res) => {
   try {
     if (req.body.value === true) {
       if (!process.env.NAVER_CLOUD_ACCESS_KEY ||
@@ -293,6 +309,70 @@ app.patch('/admin/settings/sms', (req, res) => {
     }
 
     db.prepare('UPDATE settings SET value = ? WHERE key = ?').run(req.body.value === true ? 'TRUE' : 'FALSE', 'sms');
+    res.status(200).send();
+  } catch (e) {
+    return res.status(500).send(`DB 오류: ${e}`);
+  }
+});
+
+// get priority entries
+app.get('/api/admin/priority', (req, res) => {
+  try {
+    res.json(db.prepare('SELECT * FROM priority ORDER BY inspection ASC, num ASC').all());
+  } catch (e) {
+    return res.status(500).send(`DB 오류: ${e}`);
+  }
+});
+
+// add new priority entry
+app.post('/api/admin/priority', (req, res) => {
+  const num = Number(req.body.num);
+
+  if (req.body.num === '' || Number.isNaN(num) || num < 0) {
+    return res.status(400).send('엔트리 번호가 올바르지 않습니다.');
+  }
+
+  if (!inspections[req.body.inspection]) {
+    return res.status(400).send('검차 종류가 올바르지 않습니다.');
+  }
+
+  try {
+    db.transaction(() => {
+      if (db.prepare('SELECT * FROM priority WHERE num = ? AND inspection = ?').get(num, req.body.inspection)) {
+        return res.status(400).send(`이미 존재하는 우선순위 엔트리입니다.`);
+      }
+
+      console.log(`Inserting priority entry: ${num} for ${req.body.inspection}`);
+
+      db.prepare('INSERT INTO priority (num, inspection) VALUES (?, ?)').run(num, req.body.inspection);
+
+      console.log(`Updated priority entry: ${num} for ${req.body.inspection}`);
+      res.status(201).send();
+    })();
+  } catch (e) {
+    return res.status(500).send(`DB 오류: ${e}`);
+  }
+});
+
+// delete priority entry
+app.delete('/api/admin/priority', (req, res) => {
+  const num = Number(req.body.num);
+
+  if (req.body.num === '' || Number.isNaN(num) || num < 0) {
+    return res.status(400).send('엔트리 번호가 올바르지 않습니다.');
+  }
+
+  if (!inspections[req.body.inspection]) {
+    return res.status(400).send('검차 종류가 올바르지 않습니다.');
+  }
+
+  try {
+    const ret = db.prepare('DELETE FROM priority WHERE num = ? AND inspection = ?').run(num, req.body.inspection);
+
+    if (!ret.changes) {
+      return res.status(400).send(`존재하지 않는 우선순위 엔트리입니다.`);
+    }
+
     res.status(200).send();
   } catch (e) {
     return res.status(500).send(`DB 오류: ${e}`);

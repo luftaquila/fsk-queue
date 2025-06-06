@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FSK 검차 우선순위 설정</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="/assets/btn.css" />
+  <link rel="stylesheet" href="../node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+  <link rel="stylesheet" href="../node_modules/notyf/notyf.min.css" />
+</head>
+
+<body>
+  <div class='container'>
+    <h1>✨ 검차 우선순위 설정</h1>
+
+    <div>
+      <h3>우선 검차 대상</h3>
+      <table id="priority-table"></table>
+
+      <h3>우선 검차 대상 추가</h3>
+      <div>
+        <div id="team"></div>
+        <input type="number" id="entry" placeholder="엔트리" />
+        <select id="inspection"></select>
+        <span class="btn small green" id="submit"><i class="fa fa-plus"></i>추가</span>
+      </div>
+    </div>
+  </div>
+</body>
+
+<script src='../node_modules/notyf/notyf.min.js'></script>
+<script src='script.js'></script>
+
+</html>
