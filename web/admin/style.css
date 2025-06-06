@@ -82,12 +82,8 @@ summary {
   padding: 0.5rem;
 }
 
-.hidden {
-  display: none;
-}
-
 .tab-content td {
-  padding: 0.5rem 0.7rem;
+  padding: 0.5rem;
   line-height: 1.5;
 }
 
@@ -98,4 +94,8 @@ summary {
 .notyf__toast {
   min-width: 25rem!important;
   max-width: 40rem!important;
+}
+
+.hidden {
+  display: none;
 }

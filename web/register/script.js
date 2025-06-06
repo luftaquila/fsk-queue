@@ -81,7 +81,7 @@ document.getElementById('submit').addEventListener('click', async () => {
   }
 
   try {
-    await post(`/queue/api/register/${type}`, data);
+    await post(`/queue/api/admin/register/${type}`, data);
 
     document.getElementById('entry').value = '';
     document.getElementById('phone').value = '';
