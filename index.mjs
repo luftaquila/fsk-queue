@@ -176,6 +176,10 @@ app.post('/api/admin/register/:type', async (req, res) => {
     if (req.body.num === '' || Number.isNaN(num) || num < 0 || entries[num] === undefined) {
       return res.status(400).send('엔트리 번호가 올바르지 않습니다.');
     }
+
+    if (!entries[num].enroll.some(date => date.startsWith(new Date().toISOString().slice(0, 10)))) {
+      return res.status(400).send('먼저 대회 등록을 완료해야 합니다.');
+    }
   } catch (e) {
     return res.status(500).send(`엔트리를 조회할 수 없습니다. ${e}`);
   }
