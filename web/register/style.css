@@ -39,7 +39,7 @@ div#container {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 3rem;
+  gap: 2rem;
 }
 
 div#container > div {
@@ -148,4 +148,14 @@ input::-webkit-inner-spin-button {
   body {
     zoom: 0.5;
   }
+}
+
+#qr {
+  flex-direction: column;
+  gap: 0rem!important;
+  font-weight: bold;
+}
+
+#qr img {
+  width: 120px;
 }
