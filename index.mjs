@@ -77,7 +77,10 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(pinoHttp({ stream: fs.createWriteStream('./data/queue.log', { flags: 'a' }) }));
+app.use(pinoHttp({
+  stream: fs.createWriteStream('./data/queue.log', { flags: 'a' }),
+  customProps: (req, res) => ({ reqBody: req.body }),
+}));
 
 app.listen(6000);
 
