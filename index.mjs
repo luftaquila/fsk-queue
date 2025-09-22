@@ -118,14 +118,33 @@ app.get('/api/state/:num', async (req, res) => {
       return res.status(400).send('전화번호가 일치하지 않습니다.');
     }
 
-    const rank = db.prepare(`SELECT sub.rank FROM (
+    if (entry.inspection.includes(',')) {
+      const ranks = { queue: [], rank: [] };
+
+      for (let inspection of entry.inspection.split(',')) {
+        ranks.queue.push(inspections[inspection]);
+
+        const rank = db.prepare(`SELECT sub.rank FROM (
+          SELECT t.*, CASE WHEN p.num IS NOT NULL THEN 1 ELSE 0 END AS priority,
+          ROW_NUMBER() OVER (ORDER BY (p.num IS NULL), t.timestamp ASC) AS rank
+          FROM ${inspection} AS t
+          LEFT JOIN priority AS p ON t.num = p.num AND p.inspection = ?
+        ) AS sub WHERE sub.num = ?`).get(inspection, num).rank;
+
+        ranks.rank.push(rank);
+      }
+
+      res.json({ queue: ranks.queue.join(', '), rank: ranks.rank.join(', ') });
+    } else {
+      const rank = db.prepare(`SELECT sub.rank FROM (
         SELECT t.*, CASE WHEN p.num IS NOT NULL THEN 1 ELSE 0 END AS priority,
         ROW_NUMBER() OVER (ORDER BY (p.num IS NULL), t.timestamp ASC) AS rank
         FROM ${entry.inspection} AS t
         LEFT JOIN priority AS p ON t.num = p.num AND p.inspection = ?
       ) AS sub WHERE sub.num = ?`).get(entry.inspection, num).rank;
 
-    res.json({ queue: inspections[entry.inspection], rank: rank });
+      res.json({ queue: inspections[entry.inspection], rank: rank });
+    }
   } catch (e) {
     return res.status(500).send(`DB 오류: ${e}`);
   }
@@ -190,17 +209,27 @@ app.post('/api/admin/register/:type', async (req, res) => {
 
   try {
     db.transaction(() => {
-      const current = db.prepare('SELECT * FROM current WHERE num = ?').get(num);
-
-      if (current) {
-        return res.status(400).send(`이미 ${inspections[current.inspection]} 검차에 등록된 엔트리입니다.`);
-      }
-
       if (!db.prepare('SELECT active FROM inspection WHERE type = ?').get(req.params.type).active) {
         return res.status(400).send('대기열이 비활성화 상태입니다.');
       }
 
-      db.prepare('INSERT INTO current (num, phone, inspection) VALUES (?, ?, ?)').run(num, req.body.phone, req.params.type);
+      const current = db.prepare('SELECT * FROM current WHERE num = ?').get(num);
+
+      if (current) {
+        if (
+          (current.inspection === 'battery' && req.params.type === 'chassis') ||
+          (current.inspection === 'chassis' && req.params.type === 'battery')
+        ) {
+          current.inspection += `,${req.params.type}`;
+          db.prepare('UPDATE current SET inspection = ? WHERE num = ?').run(current.inspection, num);
+        } else {
+          const name = current.inspection.includes(',') ? current.inspection.split(',').map(i => inspections[i]).join(', ') : inspections[current.inspection];
+          return res.status(400).send(`이미 ${name} 검차에 등록된 엔트리입니다.`);
+        }
+      } else {
+        db.prepare('INSERT INTO current (num, phone, inspection) VALUES (?, ?, ?)').run(num, req.body.phone, req.params.type);
+      }
+
       db.prepare(`INSERT INTO ${req.params.type} (num, phone, timestamp) VALUES (?, ?, ?)`).run(num, req.body.phone, Date.now());
       db.prepare('UPDATE inspection SET length = length + 1 WHERE type = ?').run(req.params.type);
     })();
@@ -232,7 +261,16 @@ app.delete('/api/admin/register/:type', (req, res) => {
       }
 
       db.prepare('UPDATE inspection SET length = length - 1 WHERE type = ?').run(req.params.type);
-      db.prepare('DELETE FROM current WHERE num = ?').run(num);
+
+      const current = db.prepare('SELECT * FROM current WHERE num = ?').get(num);
+
+      if (current.inspection.includes(',')) {
+        const inspections = current.inspection.split(',').filter(i => i !== req.params.type)[0];
+
+        db.prepare('UPDATE current SET inspection = ? WHERE num = ?').run(inspections, num);
+      } else {
+        db.prepare('DELETE FROM current WHERE num = ?').run(num);
+      }
     })();
 
     if (!ok) {
