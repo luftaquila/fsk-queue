@@ -247,7 +247,10 @@ app.delete('/api/admin/register/:type', (req, res) => {
     return res.status(400).send('엔트리 번호가 올바르지 않습니다.');
   }
 
-  const prev = db.prepare(`SELECT * FROM ${req.params.type} ORDER BY timestamp ASC LIMIT 1 OFFSET 2`).get();
+  const prev = db.prepare(`SELECT t.* FROM ${req.params.type} AS t
+    LEFT JOIN priority AS p ON t.num = p.num AND p.inspection = ?
+    ORDER BY (p.num IS NULL), t.timestamp ASC LIMIT 1 OFFSET 2
+  `).get(req.params.type);
 
   try {
     let ok = true;
@@ -290,7 +293,10 @@ app.delete('/api/admin/register/:type', (req, res) => {
       return;
     }
 
-    target = db.prepare(`SELECT * FROM ${req.params.type} ORDER BY timestamp ASC LIMIT 1 OFFSET 2`).get();
+    target = db.prepare(`SELECT t.* FROM ${req.params.type} AS t
+      LEFT JOIN priority AS p ON t.num = p.num AND p.inspection = ?
+      ORDER BY (p.num IS NULL), t.timestamp ASC LIMIT 1 OFFSET 2
+    `).get(req.params.type);
   } catch (e) {
     return console.error(`DB 오류: ${e}`);
   }
